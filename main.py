@@ -11,6 +11,7 @@ from src.dataset import create_training_data, compute_team_avg_margin
 from src.model import train_model
 from src.elo import compute_elo_ratings
 from src.submission import build_submission
+from src.massey import load_massey_ratings
 
 
 def run_pipeline(games, teams, league_name="MEN"):
@@ -32,11 +33,23 @@ def run_pipeline(games, teams, league_name="MEN"):
     print("Computing team average margins...")
     avg_margin = compute_team_avg_margin(games)
 
-    # 4️⃣ Build Training Dataset
-    print("Building training dataset...")
-    train_df = create_training_data(games, win_rate, elo_ratings)
+    # 4️⃣ Massey Ratings (MEN only)
+    if league_name == "MEN":
+        print("Loading Massey Ordinals...")
+        massey_ratings = load_massey_ratings()
+    else:
+        massey_ratings = None
 
-    # 5️⃣ Define Features
+    # 5️⃣ Build Training Dataset
+    print("Building training dataset...")
+    train_df = create_training_data(
+        games,
+        win_rate,
+        elo_ratings,
+        massey_ratings=massey_ratings
+    )
+
+    # 6️⃣ Define Features
     feature_cols = [
         "A_wr",
         "B_wr",
@@ -45,19 +58,22 @@ def run_pipeline(games, teams, league_name="MEN"):
         "elo_diff",
         "A_avg_margin",
         "B_avg_margin",
-        "margin_diff"
+        "margin_diff",
+        "A_massey",
+        "B_massey",
+        "massey_diff"
     ]
 
     X = train_df[feature_cols]
     y = train_df["target"]
 
-    # 6️⃣ Train Model
+    # 7️⃣ Train Model
     print("Training model...")
     model = train_model(X, y)
 
     print(f"{league_name} model training complete.")
 
-    return model, win_rate, elo_ratings, avg_margin
+    return model, win_rate, elo_ratings, avg_margin, massey_ratings
 
 
 def main():
@@ -72,7 +88,7 @@ def main():
     m_games = load_mens_games()
     m_teams = load_mens_teams()
 
-    men_model, men_wr, men_elo, men_margin = run_pipeline(
+    men_model, men_wr, men_elo, men_margin, men_massey = run_pipeline(
         m_games,
         m_teams,
         league_name="MEN"
@@ -84,7 +100,7 @@ def main():
     w_games = load_womens_games()
     w_teams = load_womens_teams()
 
-    women_model, women_wr, women_elo, women_margin = run_pipeline(
+    women_model, women_wr, women_elo, women_margin, women_massey = run_pipeline(
         w_games,
         w_teams,
         league_name="WOMEN"
@@ -108,13 +124,15 @@ def main():
         men_wr,
         men_elo,
         men_margin,
+        men_massey,
         women_model,
         women_wr,
         women_elo,
-        women_margin
+        women_margin,
+        women_massey
     )
 
-    print("\n✅ ELO + Margin submission file successfully created.")
+    print("\n✅ ELO + Margin + Massey submission file created.")
     print("You can now upload it to Kaggle.\n")
 
 

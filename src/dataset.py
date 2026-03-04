@@ -2,10 +2,6 @@ import pandas as pd
 
 
 def compute_team_avg_margin(games):
-    """
-    Compute average score margin for each team.
-    Positive margin = strong team.
-    """
 
     win_margin = games.groupby("WTeamID").apply(
         lambda x: (x["WScore"] - x["LScore"]).mean()
@@ -20,11 +16,10 @@ def compute_team_avg_margin(games):
     return total_margin.to_dict()
 
 
-def create_training_data(games, win_rate, elo_ratings):
+def create_training_data(games, win_rate, elo_ratings, massey_ratings=None):
 
     rows = []
 
-    # Compute margin feature once
     avg_margin = compute_team_avg_margin(games)
 
     for _, g in games.iterrows():
@@ -41,29 +36,50 @@ def create_training_data(games, win_rate, elo_ratings):
         A_margin = avg_margin.get(A, 0)
         B_margin = avg_margin.get(B, 0)
 
-        # Forward direction (A beats B)
+        if massey_ratings:
+            A_massey = massey_ratings.get(A, 100)
+            B_massey = massey_ratings.get(B, 100)
+        else:
+            A_massey = 100
+            B_massey = 100
+
+        # Forward direction
         rows.append({
             "A_wr": A_wr,
             "B_wr": B_wr,
+
             "A_elo": A_elo,
             "B_elo": B_elo,
             "elo_diff": A_elo - B_elo,
+
             "A_avg_margin": A_margin,
             "B_avg_margin": B_margin,
             "margin_diff": A_margin - B_margin,
+
+            "A_massey": A_massey,
+            "B_massey": B_massey,
+            "massey_diff": A_massey - B_massey,
+
             "target": 1
         })
 
-        # Reverse direction (B loses to A)
+        # Reverse direction
         rows.append({
             "A_wr": B_wr,
             "B_wr": A_wr,
+
             "A_elo": B_elo,
             "B_elo": A_elo,
             "elo_diff": B_elo - A_elo,
+
             "A_avg_margin": B_margin,
             "B_avg_margin": A_margin,
             "margin_diff": B_margin - A_margin,
+
+            "A_massey": B_massey,
+            "B_massey": A_massey,
+            "massey_diff": B_massey - A_massey,
+
             "target": 0
         })
 
