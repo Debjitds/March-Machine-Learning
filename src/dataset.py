@@ -16,11 +16,14 @@ def compute_team_avg_margin(games):
     return total_margin.to_dict()
 
 
-def create_training_data(games,
-                         win_rate,
-                         elo_ratings,
-                         massey_ratings=None,
-                         recent_wr=None):
+def create_training_data(
+    games,
+    win_rate,
+    elo_ratings,
+    massey_ratings=None,
+    recent_wr=None,
+    team_quality=None
+):
 
     rows = []
 
@@ -50,6 +53,13 @@ def create_training_data(games,
             A_massey = 100
             B_massey = 100
 
+        if team_quality:
+            A_q = team_quality.get(A, 0)
+            B_q = team_quality.get(B, 0)
+        else:
+            A_q = 0
+            B_q = 0
+
         rows.append({
 
             "A_wr": A_wr,
@@ -70,6 +80,10 @@ def create_training_data(games,
             "A_massey": A_massey,
             "B_massey": B_massey,
             "massey_diff": A_massey - B_massey,
+
+            "A_quality": A_q,
+            "B_quality": B_q,
+            "quality_diff": A_q - B_q,
 
             "target": 1
         })
@@ -94,6 +108,10 @@ def create_training_data(games,
             "A_massey": B_massey,
             "B_massey": A_massey,
             "massey_diff": B_massey - A_massey,
+
+            "A_quality": B_q,
+            "B_quality": A_q,
+            "quality_diff": B_q - A_q,
 
             "target": 0
         })
