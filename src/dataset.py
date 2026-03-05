@@ -16,7 +16,11 @@ def compute_team_avg_margin(games):
     return total_margin.to_dict()
 
 
-def create_training_data(games, win_rate, elo_ratings, massey_ratings=None):
+def create_training_data(games,
+                         win_rate,
+                         elo_ratings,
+                         massey_ratings=None,
+                         recent_wr=None):
 
     rows = []
 
@@ -29,6 +33,9 @@ def create_training_data(games, win_rate, elo_ratings, massey_ratings=None):
 
         A_wr = win_rate.get(A, 0)
         B_wr = win_rate.get(B, 0)
+
+        A_recent = recent_wr.get(A, 0.5) if recent_wr else 0.5
+        B_recent = recent_wr.get(B, 0.5) if recent_wr else 0.5
 
         A_elo = elo_ratings.get(A, 1500)
         B_elo = elo_ratings.get(B, 1500)
@@ -43,10 +50,14 @@ def create_training_data(games, win_rate, elo_ratings, massey_ratings=None):
             A_massey = 100
             B_massey = 100
 
-        # Forward direction
         rows.append({
+
             "A_wr": A_wr,
             "B_wr": B_wr,
+
+            "A_recent_wr": A_recent,
+            "B_recent_wr": B_recent,
+            "recent_wr_diff": A_recent - B_recent,
 
             "A_elo": A_elo,
             "B_elo": B_elo,
@@ -63,10 +74,14 @@ def create_training_data(games, win_rate, elo_ratings, massey_ratings=None):
             "target": 1
         })
 
-        # Reverse direction
         rows.append({
+
             "A_wr": B_wr,
             "B_wr": A_wr,
+
+            "A_recent_wr": B_recent,
+            "B_recent_wr": A_recent,
+            "recent_wr_diff": B_recent - A_recent,
 
             "A_elo": B_elo,
             "B_elo": A_elo,

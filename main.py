@@ -6,7 +6,7 @@ from src.data_loader import (
     load_sample_submission,
 )
 
-from src.features import compute_win_rate
+from src.features import compute_win_rate, compute_recent_win_rate
 from src.dataset import create_training_data, compute_team_avg_margin
 from src.model import train_model
 from src.elo import compute_elo_ratings
@@ -15,65 +15,59 @@ from src.massey import load_massey_ratings
 
 
 def run_pipeline(games, teams, league_name="MEN"):
-    """
-    Runs full training pipeline for one league (Men/Women)
-    """
 
     print(f"\n===== {league_name} PIPELINE =====")
 
-    # 1️⃣ Win Rate
     print("Creating win-rate features...")
     win_rate = compute_win_rate(games)
 
-    # 2️⃣ ELO Ratings
+    print("Computing recent form...")
+    recent_wr = compute_recent_win_rate(games)
+
     print("Computing ELO ratings...")
     elo_ratings = compute_elo_ratings(games)
 
-    # 3️⃣ Margin Feature
     print("Computing team average margins...")
     avg_margin = compute_team_avg_margin(games)
 
-    # 4️⃣ Massey Ratings (MEN only)
     if league_name == "MEN":
         print("Loading Massey Ordinals...")
         massey_ratings = load_massey_ratings()
     else:
         massey_ratings = None
 
-    # 5️⃣ Build Training Dataset
     print("Building training dataset...")
+
     train_df = create_training_data(
         games,
         win_rate,
         elo_ratings,
-        massey_ratings=massey_ratings
+        massey_ratings=massey_ratings,
+        recent_wr=recent_wr
     )
 
-    # 6️⃣ Define Features
     feature_cols = [
-        "A_wr",
-        "B_wr",
-        "A_elo",
-        "B_elo",
-        "elo_diff",
-        "A_avg_margin",
-        "B_avg_margin",
-        "margin_diff",
-        "A_massey",
-        "B_massey",
-        "massey_diff"
+
+        "A_wr","B_wr",
+
+        "A_recent_wr","B_recent_wr","recent_wr_diff",
+
+        "A_elo","B_elo","elo_diff",
+
+        "A_avg_margin","B_avg_margin","margin_diff",
+
+        "A_massey","B_massey","massey_diff"
     ]
 
     X = train_df[feature_cols]
     y = train_df["target"]
 
-    # 7️⃣ Train Model
     print("Training model...")
     model = train_model(X, y)
 
     print(f"{league_name} model training complete.")
 
-    return model, win_rate, elo_ratings, avg_margin, massey_ratings
+    return model, win_rate, elo_ratings, avg_margin, massey_ratings, recent_wr
 
 
 def main():
@@ -82,58 +76,36 @@ def main():
     print("  MARCH ML MANIA 2026 - ELO MODEL  ")
     print("====================================\n")
 
-    # -----------------------------
-    # MEN PIPELINE
-    # -----------------------------
     m_games = load_mens_games()
     m_teams = load_mens_teams()
 
-    men_model, men_wr, men_elo, men_margin, men_massey = run_pipeline(
+    men_model, men_wr, men_elo, men_margin, men_massey, men_recent = run_pipeline(
         m_games,
         m_teams,
         league_name="MEN"
     )
 
-    # -----------------------------
-    # WOMEN PIPELINE
-    # -----------------------------
     w_games = load_womens_games()
     w_teams = load_womens_teams()
 
-    women_model, women_wr, women_elo, women_margin, women_massey = run_pipeline(
+    women_model, women_wr, women_elo, women_margin, women_massey, women_recent = run_pipeline(
         w_games,
         w_teams,
         league_name="WOMEN"
     )
 
-    # -----------------------------
-    # LOAD SAMPLE SUBMISSION
-    # -----------------------------
     print("\nLoading SampleSubmissionStage2.csv...")
     sample_df = load_sample_submission()
-    print(f"Total required rows: {len(sample_df)}")
 
-    # -----------------------------
-    # BUILD FINAL SUBMISSION
-    # -----------------------------
-    print("\nGenerating predictions for required matchups...")
+    print("\nGenerating predictions...")
 
     build_submission(
         sample_df,
-        men_model,
-        men_wr,
-        men_elo,
-        men_margin,
-        men_massey,
-        women_model,
-        women_wr,
-        women_elo,
-        women_margin,
-        women_massey
+        men_model, men_wr, men_elo, men_margin, men_massey, men_recent,
+        women_model, women_wr, women_elo, women_margin, women_massey, women_recent
     )
 
-    print("\n✅ ELO + Margin + Massey submission file created.")
-    print("You can now upload it to Kaggle.\n")
+    print("\nSubmission file generated.")
 
 
 if __name__ == "__main__":
