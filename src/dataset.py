@@ -16,6 +16,14 @@ def compute_team_avg_margin(games):
     return total_margin.to_dict()
 
 
+def safe_ratio(a, b):
+
+    if b == 0:
+        return 0
+
+    return a / b
+
+
 def create_training_data(
     games,
     win_rate,
@@ -37,8 +45,8 @@ def create_training_data(
         A_wr = win_rate.get(A, 0)
         B_wr = win_rate.get(B, 0)
 
-        A_recent = recent_wr.get(A, 0.5) if recent_wr else 0.5
-        B_recent = recent_wr.get(B, 0.5) if recent_wr else 0.5
+        A_recent = recent_wr.get(A, 0.5)
+        B_recent = recent_wr.get(B, 0.5)
 
         A_elo = elo_ratings.get(A, 1500)
         B_elo = elo_ratings.get(B, 1500)
@@ -46,19 +54,11 @@ def create_training_data(
         A_margin = avg_margin.get(A, 0)
         B_margin = avg_margin.get(B, 0)
 
-        if massey_ratings:
-            A_massey = massey_ratings.get(A, 100)
-            B_massey = massey_ratings.get(B, 100)
-        else:
-            A_massey = 100
-            B_massey = 100
+        A_massey = massey_ratings.get(A, 100) if massey_ratings else 100
+        B_massey = massey_ratings.get(B, 100) if massey_ratings else 100
 
-        if team_quality:
-            A_q = team_quality.get(A, 0)
-            B_q = team_quality.get(B, 0)
-        else:
-            A_q = 0
-            B_q = 0
+        A_q = team_quality.get(A, 0)
+        B_q = team_quality.get(B, 0)
 
         rows.append({
 
@@ -84,6 +84,12 @@ def create_training_data(
             "A_quality": A_q,
             "B_quality": B_q,
             "quality_diff": A_q - B_q,
+
+            "elo_ratio": safe_ratio(A_elo, B_elo),
+            "margin_ratio": safe_ratio(A_margin, B_margin),
+            "quality_ratio": safe_ratio(A_q, B_q),
+            "massey_ratio": safe_ratio(A_massey, B_massey),
+            "recent_ratio": safe_ratio(A_recent, B_recent),
 
             "target": 1
         })
@@ -112,6 +118,12 @@ def create_training_data(
             "A_quality": B_q,
             "B_quality": A_q,
             "quality_diff": B_q - A_q,
+
+            "elo_ratio": safe_ratio(B_elo, A_elo),
+            "margin_ratio": safe_ratio(B_margin, A_margin),
+            "quality_ratio": safe_ratio(B_q, A_q),
+            "massey_ratio": safe_ratio(B_massey, A_massey),
+            "recent_ratio": safe_ratio(B_recent, A_recent),
 
             "target": 0
         })

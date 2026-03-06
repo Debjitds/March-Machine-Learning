@@ -24,10 +24,7 @@ def run_pipeline(games, teams, league_name="MEN"):
     elo_ratings = compute_elo_ratings(games)
     team_quality = compute_team_quality(games)
 
-    if league_name == "MEN":
-        massey_ratings = load_massey_ratings()
-    else:
-        massey_ratings = None
+    massey_ratings = load_massey_ratings() if league_name == "MEN" else None
 
     train_df = create_training_data(
         games,
@@ -50,7 +47,10 @@ def run_pipeline(games, teams, league_name="MEN"):
 
         "A_massey","B_massey","massey_diff",
 
-        "A_quality","B_quality","quality_diff"
+        "A_quality","B_quality","quality_diff",
+
+        "elo_ratio","margin_ratio",
+        "quality_ratio","massey_ratio","recent_ratio"
     ]
 
     X = train_df[feature_cols]
