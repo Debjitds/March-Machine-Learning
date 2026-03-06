@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from .config import DATA_PATH
 
@@ -10,7 +11,7 @@ def load_mens_games():
     """
     Load men's regular season game results.
     """
-    path = DATA_PATH + "MRegularSeasonCompactResults.csv"
+    path = os.path.join(DATA_PATH, "MRegularSeasonCompactResults.csv")
 
     df = pd.read_csv(path)
 
@@ -23,7 +24,7 @@ def load_mens_teams():
     """
     Load men's team metadata.
     """
-    path = DATA_PATH + "MTeams.csv"
+    path = os.path.join(DATA_PATH, "MTeams.csv")
 
     df = pd.read_csv(path)
 
@@ -40,7 +41,7 @@ def load_womens_games():
     """
     Load women's regular season game results.
     """
-    path = DATA_PATH + "WRegularSeasonCompactResults.csv"
+    path = os.path.join(DATA_PATH, "WRegularSeasonCompactResults.csv")
 
     df = pd.read_csv(path)
 
@@ -53,7 +54,7 @@ def load_womens_teams():
     """
     Load women's team metadata.
     """
-    path = DATA_PATH + "WTeams.csv"
+    path = os.path.join(DATA_PATH, "WTeams.csv")
 
     df = pd.read_csv(path)
 
@@ -68,26 +69,36 @@ def load_womens_teams():
 
 def load_sample_submission():
     """
-    Load the correct Kaggle submission template.
+    Automatically load the correct Kaggle submission template.
 
-    Stage1 template contains ~519k rows.
-    This function prevents accidental loading
-    of Stage2 or incorrect files.
+    Stage1  → ~519k rows (all matchups)
+    Stage2  → ~132k rows (tournament matchups)
+
+    This function detects which stage file exists.
     """
 
-    path = DATA_PATH + "SampleSubmissionStage1.csv"
+    stage1_path = os.path.join(DATA_PATH, "SampleSubmissionStage1.csv")
+    stage2_path = os.path.join(DATA_PATH, "SampleSubmissionStage2.csv")
+
+    if os.path.exists(stage2_path):
+        path = stage2_path
+        stage = "Stage2"
+
+    elif os.path.exists(stage1_path):
+        path = stage1_path
+        stage = "Stage1"
+
+    else:
+        raise FileNotFoundError(
+            "No submission template found. "
+            "Expected SampleSubmissionStage1.csv or SampleSubmissionStage2.csv."
+        )
 
     df = pd.read_csv(path)
 
     print("\nSubmission template loaded:")
-    print(path)
+    print(f"File: {path}")
+    print(f"Stage: {stage}")
     print(f"Rows detected: {len(df)}")
-
-    # Safety validation
-    if len(df) < 500000:
-        raise ValueError(
-            "Incorrect submission template detected.\n"
-            "Expected SampleSubmissionStage1.csv with ~519k rows."
-        )
 
     return df
