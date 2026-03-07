@@ -6,14 +6,26 @@ def compute_win_rate(games):
     wins = games.groupby("WTeamID").size()
     losses = games.groupby("LTeamID").size()
 
-    total = wins.add(losses, fill_value=0)
+    win_rate = {}
 
-    win_rate = wins / total
+    teams = set(wins.index).union(set(losses.index))
 
-    return win_rate.fillna(0).to_dict()
+    for team in teams:
+
+        w = wins.get(team, 0)
+        l = losses.get(team, 0)
+
+        total = w + l
+
+        if total == 0:
+            win_rate[team] = 0.5
+        else:
+            win_rate[team] = w / total
+
+    return win_rate
 
 
-def compute_recent_win_rate(games, last_n=10):
+def compute_recent_form(games, last_n=10):
 
     games = games.sort_values("DayNum")
 
@@ -27,11 +39,12 @@ def compute_recent_win_rate(games, last_n=10):
         team_games.setdefault(w, []).append(1)
         team_games.setdefault(l, []).append(0)
 
-    recent_wr = {}
+    recent_form = {}
 
     for team, results in team_games.items():
 
-        last_games = results[-last_n:]
-        recent_wr[team] = sum(last_games) / len(last_games)
+        recent = results[-last_n:]
 
-    return recent_wr
+        recent_form[team] = sum(recent) / len(recent)
+
+    return recent_form

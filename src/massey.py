@@ -1,21 +1,39 @@
 import pandas as pd
+from .config import DATA_PATH
 
 
-def load_massey_ratings(path="data/MMasseyOrdinals.csv"):
+def load_massey_ordinals(league_name):
     """
-    Load Massey Ordinal rankings and compute
-    an average rating for each team.
+    Load Massey Ordinal rankings.
+
+    Only MEN league has Massey rankings.
+    Women league will return empty dict safely.
     """
+
+    if league_name == "WOMEN":
+        print("No Massey rankings for WOMEN league.")
+        return {}
+
+    path = DATA_PATH + "MMasseyOrdinals.csv"
 
     df = pd.read_csv(path)
 
-    # Use latest day rankings
-    df = df.sort_values("RankingDayNum")
+    print(f"Loaded Massey Ordinals: {len(df)} rows")
 
-    # Keep most recent ranking for each team/system
-    df = df.groupby(["Season", "TeamID", "SystemName"]).tail(1)
+    return compute_massey_rankings(df)
 
-    # Average rankings across systems
-    ratings = df.groupby("TeamID")["OrdinalRank"].mean()
 
-    return ratings.to_dict()
+def compute_massey_rankings(df):
+    """
+    Convert Massey rankings into dictionary:
+    TeamID -> average ranking
+    """
+
+    massey = {}
+
+    grouped = df.groupby("TeamID")["OrdinalRank"].mean()
+
+    for team, rank in grouped.items():
+        massey[team] = rank
+
+    return massey

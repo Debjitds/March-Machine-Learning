@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 from .config import DATA_PATH
 
@@ -8,10 +7,8 @@ from .config import DATA_PATH
 # =========================
 
 def load_mens_games():
-    """
-    Load men's regular season game results.
-    """
-    path = os.path.join(DATA_PATH, "MRegularSeasonCompactResults.csv")
+
+    path = DATA_PATH + "MRegularSeasonCompactResults.csv"
 
     df = pd.read_csv(path)
 
@@ -21,10 +18,8 @@ def load_mens_games():
 
 
 def load_mens_teams():
-    """
-    Load men's team metadata.
-    """
-    path = os.path.join(DATA_PATH, "MTeams.csv")
+
+    path = DATA_PATH + "MTeams.csv"
 
     df = pd.read_csv(path)
 
@@ -38,10 +33,8 @@ def load_mens_teams():
 # =========================
 
 def load_womens_games():
-    """
-    Load women's regular season game results.
-    """
-    path = os.path.join(DATA_PATH, "WRegularSeasonCompactResults.csv")
+
+    path = DATA_PATH + "WRegularSeasonCompactResults.csv"
 
     df = pd.read_csv(path)
 
@@ -51,10 +44,8 @@ def load_womens_games():
 
 
 def load_womens_teams():
-    """
-    Load women's team metadata.
-    """
-    path = os.path.join(DATA_PATH, "WTeams.csv")
+
+    path = DATA_PATH + "WTeams.csv"
 
     df = pd.read_csv(path)
 
@@ -64,41 +55,46 @@ def load_womens_teams():
 
 
 # =========================
+# SEED DATA
+# =========================
+
+def load_mens_seeds():
+
+    path = DATA_PATH + "MNCAATourneySeeds.csv"
+
+    df = pd.read_csv(path)
+
+    print(f"Loaded MEN seeds: {len(df)} rows")
+
+    return df
+
+
+def load_womens_seeds():
+
+    path = DATA_PATH + "WNCAATourneySeeds.csv"
+
+    df = pd.read_csv(path)
+
+    print(f"Loaded WOMEN seeds: {len(df)} rows")
+
+    return df
+
+
+# =========================
 # SAMPLE SUBMISSION
 # =========================
 
 def load_sample_submission():
-    """
-    Automatically load the correct Kaggle submission template.
 
-    Stage1  → ~519k rows (all matchups)
-    Stage2  → ~132k rows (tournament matchups)
-
-    This function detects which stage file exists.
-    """
-
-    stage1_path = os.path.join(DATA_PATH, "SampleSubmissionStage1.csv")
-    stage2_path = os.path.join(DATA_PATH, "SampleSubmissionStage2.csv")
-
-    if os.path.exists(stage2_path):
-        path = stage2_path
-        stage = "Stage2"
-
-    elif os.path.exists(stage1_path):
-        path = stage1_path
-        stage = "Stage1"
-
-    else:
-        raise FileNotFoundError(
-            "No submission template found. "
-            "Expected SampleSubmissionStage1.csv or SampleSubmissionStage2.csv."
-        )
+    path = DATA_PATH + "SampleSubmissionStage2.csv"
 
     df = pd.read_csv(path)
 
     print("\nSubmission template loaded:")
-    print(f"File: {path}")
-    print(f"Stage: {stage}")
+    print(path)
     print(f"Rows detected: {len(df)}")
+
+    if len(df) != 132133:
+        raise ValueError("Expected Stage2 submission file (132133 rows)")
 
     return df
