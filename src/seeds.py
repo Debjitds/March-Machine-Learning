@@ -1,20 +1,50 @@
-def seed_to_int(seed):
+import pandas as pd
+from .config import DATA_PATH
 
-    if isinstance(seed, str):
-        return int(seed[1:3])
 
-    return 16
+def load_mens_seeds():
+    """
+    Load men's tournament seeds.
+    """
+    path = DATA_PATH + "MNCAATourneySeeds.csv"
+
+    df = pd.read_csv(path)
+
+    print(f"Loaded MEN seeds: {len(df)} rows")
+
+    return df
+
+
+def load_womens_seeds():
+    """
+    Load women's tournament seeds.
+    """
+    path = DATA_PATH + "WNCAATourneySeeds.csv"
+
+    df = pd.read_csv(path)
+
+    print(f"Loaded WOMEN seeds: {len(df)} rows")
+
+    return df
 
 
 def build_seed_dict(seed_df):
+    """
+    Convert seed dataframe to dictionary
+    TeamID -> Seed number
+    """
 
-    seed_dict = {}
+    seeds = {}
 
     for _, row in seed_df.iterrows():
 
         team = row["TeamID"]
-        seed = seed_to_int(row["Seed"])
 
-        seed_dict[team] = seed
+        seed = row["Seed"]
 
-    return seed_dict
+        # Example seed format: W01, X16 etc
+        seed_number = int(seed[1:3])
+
+        seeds[team] = seed_number
+
+    return seeds

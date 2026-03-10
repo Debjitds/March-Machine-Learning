@@ -98,3 +98,17 @@ def load_sample_submission():
         raise ValueError("Expected Stage2 submission file (132133 rows)")
 
     return df
+
+def load_mens_detailed_games():
+
+    """
+    Load detailed regular season game results for efficiency metrics
+    """
+
+    path = DATA_PATH + "MRegularSeasonDetailedResults.csv"
+
+    df = pd.read_csv(path)
+
+    print(f"Loaded MEN detailed games: {len(df)} rows")
+
+    return df
