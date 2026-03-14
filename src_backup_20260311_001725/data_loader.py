@@ -112,13 +112,3 @@ def load_mens_detailed_games():
     print(f"Loaded MEN detailed games: {len(df)} rows")
 
     return df
-
-def load_womens_detailed_games():
-
-    path = DATA_PATH + "WRegularSeasonDetailedResults.csv"
-
-    df = pd.read_csv(path)
-
-    print(f"Loaded WOMEN detailed games: {len(df)} rows")
-
-    return df
